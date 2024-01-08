@@ -47,18 +47,10 @@ struct ContentView: View {
             }
         }
         .coordinateSpace(name: coordinateSpace)
-        .onPreferenceChange(TopMenuHorizontalFramePreference.self, perform: {
-            stickyTopHorizontalFrames = $0
-        })
-        .onPreferenceChange(TopMenuVerticalFramePreference.self, perform: {
-            stickyTopVerticalFrames = $0
-        })
-        .onPreferenceChange(LeftMenuHorizontalFramePreference.self, perform: {
-            stickyLeftHorizontalFrames = $0
-        })
-        .onPreferenceChange(LeftMenuVerticalFramePreference.self, perform: {
-            stickyLeftVerticalFrames = $0
-        })
+        .useStickyHeaders(stickyRects: $stickyTopHorizontalFrames, preferenceKey: TopMenuHorizontalFramePreference.self)
+        .useStickyHeaders(stickyRects: $stickyTopVerticalFrames, preferenceKey: TopMenuVerticalFramePreference.self)
+        .useStickyHeaders(stickyRects: $stickyLeftHorizontalFrames, preferenceKey: LeftMenuHorizontalFramePreference.self)
+        .useStickyHeaders(stickyRects: $stickyLeftVerticalFrames, preferenceKey: LeftMenuVerticalFramePreference.self)
         .clipped()
         .padding(8)
     }
@@ -154,51 +146,34 @@ struct ContentView: View {
     ContentView()
 }
 
-struct TopMenuHorizontalFramePreference: PreferenceKey {
-    static var defaultValue: [Namespace.ID: CGRect] = [:]
-
+protocol StickyHeaderPreferenceKey: PreferenceKey {}
+extension StickyHeaderPreferenceKey where Value == [Namespace.ID: CGRect] {
     static func reduce(value: inout Value, nextValue: () -> Value) {
         value.merge(nextValue()) { $1 }
     }
 }
 
-struct TopMenuVerticalFramePreference: PreferenceKey {
+struct TopMenuHorizontalFramePreference: StickyHeaderPreferenceKey {
     static var defaultValue: [Namespace.ID: CGRect] = [:]
-
-    static func reduce(value: inout Value, nextValue: () -> Value) {
-        value.merge(nextValue()) { $1 }
-    }
 }
 
-struct LeftMenuHorizontalFramePreference: PreferenceKey {
+struct TopMenuVerticalFramePreference: StickyHeaderPreferenceKey {
     static var defaultValue: [Namespace.ID: CGRect] = [:]
-
-    static func reduce(value: inout Value, nextValue: () -> Value) {
-        value.merge(nextValue()) { $1 }
-    }
 }
 
-struct LeftMenuVerticalFramePreference: PreferenceKey {
+struct LeftMenuHorizontalFramePreference: StickyHeaderPreferenceKey {
     static var defaultValue: [Namespace.ID: CGRect] = [:]
-
-    static func reduce(value: inout Value, nextValue: () -> Value) {
-        value.merge(nextValue()) { $1 }
-    }
 }
 
-struct CornerHorizontalFramePreference: PreferenceKey {
+struct LeftMenuVerticalFramePreference: StickyHeaderPreferenceKey {
     static var defaultValue: [Namespace.ID: CGRect] = [:]
-
-    static func reduce(value: inout Value, nextValue: () -> Value) {
-        value.merge(nextValue()) { $1 }
-    }
 }
 
-struct CornerVerticalFramePreference: PreferenceKey {
+struct CornerHorizontalFramePreference: StickyHeaderPreferenceKey {
     static var defaultValue: [Namespace.ID: CGRect] = [:]
+}
 
-    static func reduce(value: inout Value, nextValue: () -> Value) {
-        value.merge(nextValue()) { $1 }
-    }
+struct CornerVerticalFramePreference: StickyHeaderPreferenceKey {
+    static var defaultValue: [Namespace.ID: CGRect] = [:]
 }
 

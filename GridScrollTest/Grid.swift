@@ -18,11 +18,6 @@ struct Grid: View {
         let width = columns * size
         let height = rows * size
 
-        LazyVGrid(columns: /*@START_MENU_TOKEN@*/[GridItem(.fixed(20))]/*@END_MENU_TOKEN@*/, pinnedViews: PinnedScrollableViews content: {
-            /*@START_MENU_TOKEN@*/Text("Placeholder")/*@END_MENU_TOKEN@*/
-            /*@START_MENU_TOKEN@*/Text("Placeholder")/*@END_MENU_TOKEN@*/
-        })
-
         GridShape(
             rows: rows,
             columns: columns,

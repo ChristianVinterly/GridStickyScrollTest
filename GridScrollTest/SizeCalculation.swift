@@ -15,10 +15,7 @@ struct SizeCalculator: ViewModifier {
         content
             .background(
                 GeometryReader { proxy in
-                    Color.clear
-                        .onAppear {
-                            size = proxy.size
-                        }
+                    Color.clear.onAppear { size = proxy.size}
                 }
             )
     }
@@ -31,10 +28,7 @@ struct WidthCalculator: ViewModifier {
         content
             .background(
                 GeometryReader { proxy in
-                    Color.clear
-                        .onAppear {
-                            width = proxy.size.width
-                        }
+                    Color.clear.onAppear { width = proxy.size.width }
                 }
             )
     }
@@ -47,10 +41,7 @@ struct HeightCalculator: ViewModifier {
         content
             .background(
                 GeometryReader { proxy in
-                    Color.clear
-                        .onAppear {
-                            height = proxy.size.height
-                        }
+                    Color.clear.onAppear { height = proxy.size.height }
                 }
             )
     }

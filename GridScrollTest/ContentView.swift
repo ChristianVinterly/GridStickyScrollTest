@@ -10,6 +10,7 @@ import SwiftUI
 struct ContentView: View {
     let horizontalHeaderScrollViewCoordinateSpace = "horizontalHeaderScrollViewCoordinateSpace"
     let firstScrollViewCoordinateSpace = "firstScrollViewCoordinateSpace"
+    let secondScrollViewCoordinateSpace = "secondScrollViewCoordinateSpace"
 
     @State private var stickyTopHorizontalFrames: [Namespace.ID: CGRect] = [:]
     @State private var stickyTopVerticalFrames: [Namespace.ID: CGRect] = [:]
@@ -37,7 +38,7 @@ struct ContentView: View {
                             .frame(height: headerHeight)
                             .padding(.leading, stickyTopXOffset)
                     }
-                    .frame(height: headerHeight)
+                    .frame(height: stickyLeftYOffset)
                     .coordinateSpace(name: horizontalHeaderScrollViewCoordinateSpace)
                     .useStickyHeaders(
                         stickyRects: $stickyTopHorizontalFrames,
@@ -51,7 +52,7 @@ struct ContentView: View {
                     VStack(alignment: .leading, spacing: padding) {
                         ScrollableView($scrollOffset, animationDuration: 0, axis: .horizontal) {
                             HStack(alignment: .top, spacing: 0) {
-                                verticalHeaders
+                                verticalHeaders(coordinateSpace: firstScrollViewCoordinateSpace)
                                 Grid(
                                     rows: gridHeight / gridSquareSize,
                                     columns: gridWidth / gridSquareSize,
@@ -68,21 +69,29 @@ struct ContentView: View {
                         .frame(height: gridHeight)
 
                         ScrollableView($scrollOffset, animationDuration: 0, axis: .horizontal) {
-                            Grid(
-                                rows: gridHeight / gridSquareSize,
-                                columns: gridWidth / gridSquareSize,
-                                size: gridSquareSize,
-                                gridColor: .blue
-                            )
+                            HStack(alignment: .top, spacing: 0) {
+                                verticalHeaders(coordinateSpace: secondScrollViewCoordinateSpace)
+                                Grid(
+                                    rows: gridHeight / gridSquareSize,
+                                    columns: gridWidth / gridSquareSize,
+                                    size: gridSquareSize,
+                                    gridColor: .blue
+                                )
+                            }
                         }
+                        .coordinateSpace(name: secondScrollViewCoordinateSpace)
+                        .useStickyHeaders(
+                            stickyRects: $stickyLeftHorizontalFrames,
+                            preferenceKey: LeftMenuHorizontalFramePreference.self
+                        )
                         .frame(height: gridHeight)
                     }
                 }
                 topLeftCornerOverlay
             }
+            .background(Color.red)
         }
         .clipped()
-        .padding(8)
         .background(Color.white)
     }
 
@@ -126,7 +135,7 @@ struct ContentView: View {
         .saveHeight(in: $stickyLeftYOffset)
     }
 
-    @ViewBuilder var verticalHeaders: some View {
+    @ViewBuilder func verticalHeaders(coordinateSpace: String) -> some View {
         VStack(spacing: gridSquareSize) {
             let numberOfLabels = Int(gridHeight / (2 * gridSquareSize))
             ForEach(0..<numberOfLabels, id: \.self) { index in
@@ -140,7 +149,7 @@ struct ContentView: View {
         .background(Color.white)
         .stickyHorizontal(
             stickyRects: stickyLeftHorizontalFrames,
-            coordinateSpace: firstScrollViewCoordinateSpace,
+            coordinateSpace: coordinateSpace,
             preferenceKey: LeftMenuHorizontalFramePreference.self,
             stickyXOffset: .constant(0)
         )

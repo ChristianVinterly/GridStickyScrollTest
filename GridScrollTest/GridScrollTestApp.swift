@@ -12,6 +12,7 @@ struct GridScrollTestApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .colorScheme(.light)
         }
     }
 }

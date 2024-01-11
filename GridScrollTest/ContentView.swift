@@ -8,51 +8,82 @@
 import SwiftUI
 
 struct ContentView: View {
-    let coordinateSpace = "container"
+    let horizontalHeaderScrollViewCoordinateSpace = "horizontalHeaderScrollViewCoordinateSpace"
+    let firstScrollViewCoordinateSpace = "firstScrollViewCoordinateSpace"
 
     @State private var stickyTopHorizontalFrames: [Namespace.ID: CGRect] = [:]
     @State private var stickyTopVerticalFrames: [Namespace.ID: CGRect] = [:]
 
     @State private var stickyLeftHorizontalFrames: [Namespace.ID: CGRect] = [:]
-    @State private var stickyLeftVerticalFrames: [Namespace.ID: CGRect] = [:]
-
-    @State private var stickyCornerHorizontalFrames: [Namespace.ID: CGRect] = [:]
-    @State private var stickyCornerVerticalFrames: [Namespace.ID: CGRect] = [:]
 
     @State private var stickyTopXOffset: CGFloat = 0
     @State private var stickyLeftYOffset: CGFloat = 0
 
+    @State private var scrollOffset = CGPoint.zero
+    @State private var verticalScrollOffset = CGPoint.zero
+
     private let padding: CGFloat = 8
     private let gridWidth: CGFloat = 3000
-    private let gridHeight: CGFloat = 2000
+    private let gridHeight: CGFloat = 200
     private let gridSquareSize: CGFloat = 50
+    private let headerHeight: CGFloat = 24
 
     var body: some View {
-        ScrollView([.horizontal, .vertical], showsIndicators: true) {
+        ScrollView([.vertical], showsIndicators: true) {
             ZStack(alignment: .topLeading) {
-                VStack(alignment: .leading, spacing: 0) {
-                    horizontalHeaders
-                        .padding(.leading, stickyTopXOffset)
-                    HStack(alignment: .top, spacing: 0) {
-                        verticalHeaders
-                        Grid(
-                            rows: gridHeight / gridSquareSize,
-                            columns: gridWidth / gridSquareSize,
-                            size: gridSquareSize,
-                            gridColor: .blue
+                VStack(alignment: .leading, spacing: padding) {
+                    ScrollableView($scrollOffset, animationDuration: 0, axis: .horizontal) {
+                        horizontalHeaders
+                            .frame(height: headerHeight)
+                            .padding(.leading, stickyTopXOffset)
+                    }
+                    .frame(height: headerHeight)
+                    .coordinateSpace(name: horizontalHeaderScrollViewCoordinateSpace)
+                    .useStickyHeaders(
+                        stickyRects: $stickyTopHorizontalFrames,
+                        preferenceKey: TopMenuHorizontalFramePreference.self
+                    )
+                    .useStickyHeaders(
+                        stickyRects: $stickyTopVerticalFrames,
+                        preferenceKey: TopMenuVerticalFramePreference.self
+                    )
+
+                    VStack(alignment: .leading, spacing: padding) {
+                        ScrollableView($scrollOffset, animationDuration: 0, axis: .horizontal) {
+                            HStack(alignment: .top, spacing: 0) {
+                                verticalHeaders
+                                Grid(
+                                    rows: gridHeight / gridSquareSize,
+                                    columns: gridWidth / gridSquareSize,
+                                    size: gridSquareSize,
+                                    gridColor: .blue
+                                )
+                            }
+                        }
+                        .coordinateSpace(name: firstScrollViewCoordinateSpace)
+                        .useStickyHeaders(
+                            stickyRects: $stickyLeftHorizontalFrames,
+                            preferenceKey: LeftMenuHorizontalFramePreference.self
                         )
+                        .frame(height: gridHeight)
+
+                        ScrollableView($scrollOffset, animationDuration: 0, axis: .horizontal) {
+                            Grid(
+                                rows: gridHeight / gridSquareSize,
+                                columns: gridWidth / gridSquareSize,
+                                size: gridSquareSize,
+                                gridColor: .blue
+                            )
+                        }
+                        .frame(height: gridHeight)
                     }
                 }
                 topLeftCornerOverlay
             }
         }
-        .coordinateSpace(name: coordinateSpace)
-        .useStickyHeaders(stickyRects: $stickyTopHorizontalFrames, preferenceKey: TopMenuHorizontalFramePreference.self)
-        .useStickyHeaders(stickyRects: $stickyTopVerticalFrames, preferenceKey: TopMenuVerticalFramePreference.self)
-        .useStickyHeaders(stickyRects: $stickyLeftHorizontalFrames, preferenceKey: LeftMenuHorizontalFramePreference.self)
-        .useStickyHeaders(stickyRects: $stickyLeftVerticalFrames, preferenceKey: LeftMenuVerticalFramePreference.self)
         .clipped()
         .padding(8)
+        .background(Color.white)
     }
 
     @ViewBuilder
@@ -65,6 +96,7 @@ struct ContentView: View {
                 .font(.body)
                 .foregroundColor(.blue)
         }
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     @ViewBuilder var horizontalHeaders: some View {
@@ -76,7 +108,7 @@ struct ContentView: View {
                     .background(Color.white)
                     .stickyHorizontal(
                         stickyRects: stickyTopHorizontalFrames,
-                        coordinateSpace: coordinateSpace,
+                        coordinateSpace: horizontalHeaderScrollViewCoordinateSpace,
                         preferenceKey: TopMenuHorizontalFramePreference.self,
                         stickyXOffset: $stickyTopXOffset
                     )
@@ -87,7 +119,7 @@ struct ContentView: View {
         .background(Color.white)
         .stickyVertical(
             stickyRects: stickyTopVerticalFrames,
-            coordinateSpace: coordinateSpace,
+            coordinateSpace: horizontalHeaderScrollViewCoordinateSpace,
             preferenceKey: TopMenuVerticalFramePreference.self,
             stickyYOffset: .constant(0)
         )
@@ -101,12 +133,6 @@ struct ContentView: View {
                 header(index: index)
                 .frame(height: gridSquareSize)
                 .background(Color.white)
-                .stickyVertical(
-                    stickyRects: stickyLeftVerticalFrames,
-                    coordinateSpace: coordinateSpace,
-                    preferenceKey: LeftMenuVerticalFramePreference.self,
-                    stickyYOffset: $stickyLeftYOffset
-                )
             }
         }
         .frame(height: gridHeight, alignment: .top)
@@ -114,7 +140,7 @@ struct ContentView: View {
         .background(Color.white)
         .stickyHorizontal(
             stickyRects: stickyLeftHorizontalFrames,
-            coordinateSpace: coordinateSpace,
+            coordinateSpace: firstScrollViewCoordinateSpace,
             preferenceKey: LeftMenuHorizontalFramePreference.self,
             stickyXOffset: .constant(0)
         )
@@ -125,21 +151,7 @@ struct ContentView: View {
         Rectangle()
             .foregroundColor(.white)
             .frame(width: stickyTopXOffset, height: stickyLeftYOffset)
-            .stickyHorizontal(
-                stickyRects: stickyCornerHorizontalFrames,
-                coordinateSpace: coordinateSpace,
-                preferenceKey: CornerHorizontalFramePreference.self,
-                stickyXOffset: .constant(0)
-            )
-            .stickyVertical(
-                stickyRects: stickyCornerVerticalFrames,
-                coordinateSpace: coordinateSpace,
-                preferenceKey: CornerVerticalFramePreference.self,
-                stickyYOffset: .constant(0)
-            )
     }
-
-
 }
 
 #Preview {
@@ -176,4 +188,3 @@ struct CornerHorizontalFramePreference: StickyHeaderPreferenceKey {
 struct CornerVerticalFramePreference: StickyHeaderPreferenceKey {
     static var defaultValue: [Namespace.ID: CGRect] = [:]
 }
-

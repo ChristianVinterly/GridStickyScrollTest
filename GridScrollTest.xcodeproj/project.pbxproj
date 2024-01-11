@@ -12,6 +12,7 @@
 		93AC81C22B4EC16500455E00 /* LongPressOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93AC81C12B4EC16500455E00 /* LongPressOverlay.swift */; };
 		93AC81C42B4EC18E00455E00 /* GridSelectedColumnShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93AC81C32B4EC18E00455E00 /* GridSelectedColumnShape.swift */; };
 		93AC81C62B4EC1A900455E00 /* GridShape.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93AC81C52B4EC1A900455E00 /* GridShape.swift */; };
+		93B7BEEC2B4FFAEB00181912 /* ScrollableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93B7BEEB2B4FFAEB00181912 /* ScrollableView.swift */; };
 		93DC01262B440246002330CD /* GridScrollTestApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93DC01252B440246002330CD /* GridScrollTestApp.swift */; };
 		93DC01282B440246002330CD /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93DC01272B440246002330CD /* ContentView.swift */; };
 		93DC012A2B440247002330CD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 93DC01292B440247002330CD /* Assets.xcassets */; };
@@ -28,6 +29,7 @@
 		93AC81C12B4EC16500455E00 /* LongPressOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LongPressOverlay.swift; sourceTree = "<group>"; };
 		93AC81C32B4EC18E00455E00 /* GridSelectedColumnShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridSelectedColumnShape.swift; sourceTree = "<group>"; };
 		93AC81C52B4EC1A900455E00 /* GridShape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridShape.swift; sourceTree = "<group>"; };
+		93B7BEEB2B4FFAEB00181912 /* ScrollableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollableView.swift; sourceTree = "<group>"; };
 		93DC01222B440246002330CD /* GridScrollTest.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GridScrollTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		93DC01252B440246002330CD /* GridScrollTestApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridScrollTestApp.swift; sourceTree = "<group>"; };
 		93DC01272B440246002330CD /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -78,6 +80,7 @@
 				93AC81C52B4EC1A900455E00 /* GridShape.swift */,
 				93AC81C32B4EC18E00455E00 /* GridSelectedColumnShape.swift */,
 				93DC01362B45B469002330CD /* Sticky.swift */,
+				93B7BEEB2B4FFAEB00181912 /* ScrollableView.swift */,
 				93AC81C12B4EC16500455E00 /* LongPressOverlay.swift */,
 				93918D352B4BF0EC00E3DA3E /* UseStickyHeader.swift */,
 				93DC013A2B46FAED002330CD /* AlternativeScrollViewSolution.swift */,
@@ -168,6 +171,7 @@
 			files = (
 				93AC81C42B4EC18E00455E00 /* GridSelectedColumnShape.swift in Sources */,
 				93DC01282B440246002330CD /* ContentView.swift in Sources */,
+				93B7BEEC2B4FFAEB00181912 /* ScrollableView.swift in Sources */,
 				93918D382B4BF52900E3DA3E /* DragState.swift in Sources */,
 				93AC81C22B4EC16500455E00 /* LongPressOverlay.swift in Sources */,
 				93DC01352B45B449002330CD /* SizeCalculation.swift in Sources */,

@@ -266,6 +266,7 @@ final class UIScrollViewController<Content: View> : UIViewController, Observable
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
 
+        // Small hack to fix offset issue on appear
         DispatchQueue.main.async {
             self.offset.wrappedValue = CGPoint(x: 1e-10, y: 1e-10)
         }

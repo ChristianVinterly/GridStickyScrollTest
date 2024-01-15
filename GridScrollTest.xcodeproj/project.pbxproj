@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		938EA04A2B555B8800B6C873 /* LockedInScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 938EA0492B555B8800B6C873 /* LockedInScrollView.swift */; };
 		93918D362B4BF0EC00E3DA3E /* UseStickyHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93918D352B4BF0EC00E3DA3E /* UseStickyHeader.swift */; };
 		93918D382B4BF52900E3DA3E /* DragState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93918D372B4BF52900E3DA3E /* DragState.swift */; };
 		93AC81C22B4EC16500455E00 /* LongPressOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93AC81C12B4EC16500455E00 /* LongPressOverlay.swift */; };
@@ -24,6 +25,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		938EA0492B555B8800B6C873 /* LockedInScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockedInScrollView.swift; sourceTree = "<group>"; };
 		93918D352B4BF0EC00E3DA3E /* UseStickyHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UseStickyHeader.swift; sourceTree = "<group>"; };
 		93918D372B4BF52900E3DA3E /* DragState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragState.swift; sourceTree = "<group>"; };
 		93AC81C12B4EC16500455E00 /* LongPressOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LongPressOverlay.swift; sourceTree = "<group>"; };
@@ -80,6 +82,7 @@
 				93AC81C52B4EC1A900455E00 /* GridShape.swift */,
 				93AC81C32B4EC18E00455E00 /* GridSelectedColumnShape.swift */,
 				93DC01362B45B469002330CD /* Sticky.swift */,
+				938EA0492B555B8800B6C873 /* LockedInScrollView.swift */,
 				93B7BEEB2B4FFAEB00181912 /* ScrollableView.swift */,
 				93AC81C12B4EC16500455E00 /* LongPressOverlay.swift */,
 				93918D352B4BF0EC00E3DA3E /* UseStickyHeader.swift */,
@@ -170,6 +173,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				93AC81C42B4EC18E00455E00 /* GridSelectedColumnShape.swift in Sources */,
+				938EA04A2B555B8800B6C873 /* LockedInScrollView.swift in Sources */,
 				93DC01282B440246002330CD /* ContentView.swift in Sources */,
 				93B7BEEC2B4FFAEB00181912 /* ScrollableView.swift in Sources */,
 				93918D382B4BF52900E3DA3E /* DragState.swift in Sources */,

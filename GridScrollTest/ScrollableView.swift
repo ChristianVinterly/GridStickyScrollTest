@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ScrollableView<Content: View>: UIViewControllerRepresentable, Equatable {
+struct ScrollableView<Content: View>: UIViewControllerRepresentable {
 
     final class Coordinator: NSObject, UIScrollViewDelegate {
 
@@ -16,6 +16,7 @@ struct ScrollableView<Content: View>: UIViewControllerRepresentable, Equatable {
         private let scrollView: UIScrollView
         private let id: Namespace.ID
         private var isDragging = false
+        private var isDecelerating = false
 
         init(
             _ scrollView: UIScrollView,
@@ -39,13 +40,15 @@ struct ScrollableView<Content: View>: UIViewControllerRepresentable, Equatable {
 
             guard !isOtherScrollViewTracking else {
                 // Stop animation of previous deacceleration if user scrolls other synced view while deaccelerating
+                isDecelerating = false
+                isDragging = false
                 scrollView.setContentOffset(scrollView.contentOffset, animated: false)
                 return
             }
-            DispatchQueue.main.async {
+
+            guard scrollView.isTracking || isDragging || isDecelerating else { return }
                 self.offset = scrollView.contentOffset
                 self.scrollViewsTracking[self.id] = self.isDragging
-            }
         }
 
         func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
@@ -54,47 +57,58 @@ struct ScrollableView<Content: View>: UIViewControllerRepresentable, Equatable {
 
         func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
             isDragging = false
+            isDecelerating = decelerate
+
+            DispatchQueue.main.async {
+                self.scrollViewsTracking[self.id] = self.isDragging
+            }
         }
 
+        func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+            isDecelerating = false
+        }
     }
 
     typealias UIViewControllerType = UIScrollViewController<Content>
 
     @Binding var offset: CGPoint
     @Binding var scrollViewsTracking: [Namespace.ID: Bool?]
+    var activeScrollView: Namespace.ID?
     var animationDuration: TimeInterval
     var showsScrollIndicator: Bool
     var axis: Axis
     var content: () -> Content
     var onScale: ((CGFloat)->Void)?
     var disableScroll: Bool
-    var forceRefresh: Bool
+    var disableScrollIfNotFirstActive: Bool
     var stopScrolling: Binding<Bool>
     private let scrollViewController: UIViewControllerType
 
-    @Namespace private var id
+    @Namespace var id
 
     init(
         _ offset: Binding<CGPoint>,
         scrollViewsTracking: Binding<[Namespace.ID: Bool?]>,
+        activeScrollView: Namespace.ID?,
         animationDuration: TimeInterval,
         showsScrollIndicator: Bool = true,
         axis: Axis = .vertical,
         onScale: ((CGFloat)->Void)? = nil,
         disableScroll: Bool = false,
-        forceRefresh: Bool = false,
-        stopScrolling: Binding<Bool> = .constant(false),  
+        disableScrollIfNotFirstActive: Bool = true,
+        stopScrolling: Binding<Bool> = .constant(false),
         @ViewBuilder content: @escaping () -> Content
     ) {
         self._offset = offset
         self._scrollViewsTracking = scrollViewsTracking
+        self.activeScrollView = activeScrollView
         self.onScale = onScale
         self.animationDuration = animationDuration
         self.content = content
         self.showsScrollIndicator = showsScrollIndicator
         self.axis = axis
         self.disableScroll = disableScroll
-        self.forceRefresh = forceRefresh
+        self.disableScrollIfNotFirstActive = disableScrollIfNotFirstActive
         self.stopScrolling = stopScrolling
         self.scrollViewController = UIScrollViewController(
             rootView: self.content(),
@@ -118,7 +132,12 @@ struct ScrollableView<Content: View>: UIViewControllerRepresentable, Equatable {
 
         let duration: TimeInterval = self.duration(viewController)
         let newValue: CGPoint = self.offset
-        viewController.scrollView.isScrollEnabled = !self.disableScroll
+
+        if let activeScrollView = activeScrollView, disableScrollIfNotFirstActive && id != activeScrollView {
+            viewController.scrollView.isScrollEnabled = false
+        } else {
+            viewController.scrollView.isScrollEnabled = !self.disableScroll
+        }
 
         if self.stopScrolling.wrappedValue {
             viewController.scrollView.setContentOffset(
@@ -188,10 +207,6 @@ struct ScrollableView<Content: View>: UIViewControllerRepresentable, Equatable {
 
         return self.animationDuration * min(max(TimeInterval(percentageMoved), 0.25), 1)
     }
-
-    static func == (lhs: ScrollableView, rhs: ScrollableView) -> Bool {
-        return !lhs.forceRefresh && lhs.forceRefresh == rhs.forceRefresh
-    }
 }
 
 final class UIScrollViewController<Content: View> : UIViewController, ObservableObject {
@@ -203,7 +218,6 @@ final class UIScrollViewController<Content: View> : UIViewController, Observable
     lazy var scrollView: UIScrollView = {
 
         let scrollView = UIScrollView()
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.canCancelContentTouches = true
         scrollView.delaysContentTouches = true
         scrollView.scrollsToTop = true
@@ -236,20 +250,23 @@ final class UIScrollViewController<Content: View> : UIViewController, Observable
 
     func updateContent(_ content: () -> Content) {
 
-        self.hostingController.rootView = content()
-        self.scrollView.addSubview(self.hostingController.view)
+        hostingController.rootView = content()
+        scrollView.addSubview(hostingController.view)
+        updateContentSize()
+    }
 
-        var contentSize: CGSize = self.hostingController.view.intrinsicContentSize
+    func updateContentSize() {
+        var contentSize: CGSize = hostingController.view.intrinsicContentSize
 
         switch axis {
             case .vertical:
-                contentSize.width = self.scrollView.frame.width
+                contentSize.width = scrollView.frame.width
             case .horizontal:
-                contentSize.height = self.scrollView.frame.height
+                contentSize.height = scrollView.frame.height
         }
 
-        self.hostingController.view.frame.size = contentSize
-        self.scrollView.contentSize = contentSize
+        hostingController.view.frame = CGRect(origin: .zero, size: contentSize)
+        scrollView.contentSize = contentSize
     }
 
     required init?(coder: NSCoder) {
@@ -272,7 +289,18 @@ final class UIScrollViewController<Content: View> : UIViewController, Observable
         }
     }
 
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+
+        updateContentSize()
+        scrollView.setContentOffset(.zero, animated: false)
+        self.view.setNeedsUpdateConstraints()
+        self.view.updateConstraintsIfNeeded()
+    }
+
     fileprivate func createConstraints() {
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+
         NSLayoutConstraint.activate([
             self.scrollView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor),
             self.scrollView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor),
@@ -280,6 +308,8 @@ final class UIScrollViewController<Content: View> : UIViewController, Observable
             self.scrollView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor)
         ])
 
-        self.hostingController.view.frame = CGRect(origin: .zero, size: self.scrollView.contentSize)
+        DispatchQueue.main.async {
+            self.hostingController.view.frame = CGRect(origin: .zero, size: self.scrollView.contentSize)
+        }
     }
 }

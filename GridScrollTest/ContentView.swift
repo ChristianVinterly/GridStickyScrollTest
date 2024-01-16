@@ -22,33 +22,46 @@ struct ContentView: View {
 
     @State var horizontalScrollViewsTracking: [Namespace.ID: Bool?] = [:]
 
+    var activeScrollViewId: Namespace.ID? {
+        return horizontalScrollViewsTracking.first(where: { $0.value == true })?.key
+    }
+
     private let padding: CGFloat = 8
     private let gridWidth: CGFloat = 3000
     private let gridHeight: CGFloat = 300
     private let gridSquareSize: CGFloat = 50
 
     var body: some View {
-        ScrollView(.vertical, showsIndicators: true) {
-            ZStack(alignment: .topLeading) {
-                VStack(alignment: .leading, spacing: padding) {
-                    horizontalHeaders
-
+        GeometryReader { proxy in
+            ScrollView(.vertical, showsIndicators: true) {
+                ZStack(alignment: .topLeading) {
                     VStack(alignment: .leading, spacing: padding) {
-                        horizontalScrollGrid(coordinateSpace: firstHorizontalScrollViewCoordinateSpace)
-                        horizontalScrollGrid(coordinateSpace: secondHorizontalScrollViewCoordinateSpace)
+                        horizontalHeaders(safeAreaInsets: proxy.safeAreaInsets)
+
+                        VStack(alignment: .leading, spacing: padding) {
+                            horizontalScrollGrid(
+                                coordinateSpace: firstHorizontalScrollViewCoordinateSpace,
+                                safeAreaInsets: proxy.safeAreaInsets
+                            )
+                            horizontalScrollGrid(
+                                coordinateSpace: secondHorizontalScrollViewCoordinateSpace,
+                                safeAreaInsets: proxy.safeAreaInsets
+                            )
+                        }
                     }
+                    topLeftCornerOverlay
+                        .lockedInScrollView(
+                            axis: .vertical,
+                            coordinateSpace: outerScrollViewCoordinateSpace,
+                            safeAreaInsets: EdgeInsets(),
+                            lockedOffset: .constant(0)
+                        )
                 }
-                topLeftCornerOverlay
-                    .lockedInScrollView(
-                        axis: .vertical,
-                        coordinateSpace: outerScrollViewCoordinateSpace,
-                        lockedOffset: .constant(0)
-                    )
             }
+            .coordinateSpace(name: outerScrollViewCoordinateSpace)
+            .clipped()
+            .background(Color.white)
         }
-        .coordinateSpace(name: outerScrollViewCoordinateSpace)
-        .clipped()
-        .background(Color.white)
     }
 
     @ViewBuilder
@@ -63,10 +76,11 @@ struct ContentView: View {
         }
     }
 
-    @ViewBuilder var horizontalHeaders: some View {
+    @ViewBuilder func horizontalHeaders(safeAreaInsets: EdgeInsets) -> some View {
         ScrollableView(
             $scrollOffset,
             scrollViewsTracking: $horizontalScrollViewsTracking,
+            activeScrollView: activeScrollViewId,
             animationDuration: 0,
             showsScrollIndicator: false,
             axis: .horizontal
@@ -88,7 +102,9 @@ struct ContentView: View {
             .frame(width: gridWidth, alignment: .leading)
             .padding(.bottom, padding)
             .background(Color.white)
-            .saveHeight(in: $horizontalHeaderHeight)
+            .readSize(onChange: { size in
+                horizontalHeaderHeight = size.height
+            })
             .padding(.leading, verticalHeaderWidth)
         }
         .frame(height: horizontalHeaderHeight)
@@ -100,14 +116,16 @@ struct ContentView: View {
         .lockedInScrollView(
             axis: .vertical,
             coordinateSpace: outerScrollViewCoordinateSpace,
+            safeAreaInsets: EdgeInsets(),
             lockedOffset: .constant(0)
         )
     }
 
-    @ViewBuilder func horizontalScrollGrid(coordinateSpace: String) -> some View {
+    @ViewBuilder func horizontalScrollGrid(coordinateSpace: String, safeAreaInsets: EdgeInsets) -> some View {
         ScrollableView(
             $scrollOffset,
             scrollViewsTracking: $horizontalScrollViewsTracking,
+            activeScrollView: activeScrollViewId,
             animationDuration: 0,
             showsScrollIndicator: false,
             axis: .horizontal
@@ -127,9 +145,12 @@ struct ContentView: View {
                 .lockedInScrollView(
                     axis: .horizontal,
                     coordinateSpace: coordinateSpace,
+                    safeAreaInsets: safeAreaInsets,
                     lockedOffset: .constant(0)
                 )
-                .saveWidth(in: $verticalHeaderWidth)
+                .readSize(onChange: { size in
+                    verticalHeaderWidth = size.width
+                })
 
                 Grid(
                     rows: gridHeight / gridSquareSize,
@@ -162,25 +183,5 @@ extension StickyHeaderPreferenceKey where Value == [Namespace.ID: CGRect] {
 }
 
 struct TopMenuHorizontalFramePreference: StickyHeaderPreferenceKey {
-    static var defaultValue: [Namespace.ID: CGRect] = [:]
-}
-
-struct TopMenuVerticalFramePreference: StickyHeaderPreferenceKey {
-    static var defaultValue: [Namespace.ID: CGRect] = [:]
-}
-
-struct LeftMenuHorizontalFramePreference: StickyHeaderPreferenceKey {
-    static var defaultValue: [Namespace.ID: CGRect] = [:]
-}
-
-struct LeftMenuVerticalFramePreference: StickyHeaderPreferenceKey {
-    static var defaultValue: [Namespace.ID: CGRect] = [:]
-}
-
-struct CornerHorizontalFramePreference: StickyHeaderPreferenceKey {
-    static var defaultValue: [Namespace.ID: CGRect] = [:]
-}
-
-struct CornerVerticalFramePreference: StickyHeaderPreferenceKey {
     static var defaultValue: [Namespace.ID: CGRect] = [:]
 }

@@ -11,8 +11,13 @@ import SwiftUI
 struct GridScrollTestApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
-                .colorScheme(.light)
+            ZStack {
+                Color.white.ignoresSafeArea()
+
+                ContentView()
+                    .background(Color.white)
+                    .colorScheme(.light)
+            }
         }
     }
 }

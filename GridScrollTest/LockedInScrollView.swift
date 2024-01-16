@@ -15,22 +15,23 @@ struct LockedInScrollView: ViewModifier {
     }
     let axis: Axis
     let coordinateSpace: String
+    let safeAreaInsets: EdgeInsets
 
     @Binding var lockedOffset: CGFloat
     @State private var frame: CGRect = .zero
 
     var isLocked: Bool {
         switch axis {
-        case .horizontal: return frame.minX != lockedOffset
-        case .vertical: return frame.minY != lockedOffset
+        case .horizontal: return frame.minX != lockedOffset + safeAreaInsets.leading
+        case .vertical: return frame.minY != lockedOffset + safeAreaInsets.top
         }
     }
 
     var offset: CGFloat {
         guard isLocked else { return lockedOffset }
         switch axis {
-        case .horizontal: return -frame.minX
-        case .vertical: return -frame.minY
+        case .horizontal: return -frame.minX + lockedOffset + safeAreaInsets.leading
+        case .vertical: return -frame.minY + lockedOffset + safeAreaInsets.top
         }
     }
 
@@ -51,12 +52,14 @@ extension View {
     func lockedInScrollView(
         axis: LockedInScrollView.Axis,
         coordinateSpace: String,
+        safeAreaInsets: EdgeInsets,
         lockedOffset: Binding<CGFloat>
     ) -> some View {
         modifier(
             LockedInScrollView(
                 axis: axis,
                 coordinateSpace: coordinateSpace,
+                safeAreaInsets: safeAreaInsets,
                 lockedOffset: lockedOffset
             )
         )

@@ -81,7 +81,6 @@ struct ContentView: View {
             $scrollOffset,
             scrollViewsTracking: $horizontalScrollViewsTracking,
             activeScrollView: activeScrollViewId,
-            animationDuration: 0,
             showsScrollIndicator: false,
             axis: .horizontal
         ) {
@@ -126,7 +125,6 @@ struct ContentView: View {
             $scrollOffset,
             scrollViewsTracking: $horizontalScrollViewsTracking,
             activeScrollView: activeScrollViewId,
-            animationDuration: 0,
             showsScrollIndicator: false,
             axis: .horizontal
         ) {

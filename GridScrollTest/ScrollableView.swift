@@ -47,8 +47,12 @@ struct ScrollableView<Content: View>: UIViewControllerRepresentable {
             }
 
             guard scrollView.isTracking || isDragging || isDecelerating else { return }
-                self.offset = scrollView.contentOffset
+            
+            self.offset = scrollView.contentOffset
+
+            DispatchQueue.main.async {
                 self.scrollViewsTracking[self.id] = self.isDragging
+            }
         }
 
         func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
@@ -74,11 +78,9 @@ struct ScrollableView<Content: View>: UIViewControllerRepresentable {
     @Binding var offset: CGPoint
     @Binding var scrollViewsTracking: [Namespace.ID: Bool?]
     var activeScrollView: Namespace.ID?
-    var animationDuration: TimeInterval
     var showsScrollIndicator: Bool
     var axis: Axis
     var content: () -> Content
-    var onScale: ((CGFloat)->Void)?
     var disableScroll: Bool
     var disableScrollIfNotFirstActive: Bool
     var stopScrolling: Binding<Bool>
@@ -90,10 +92,8 @@ struct ScrollableView<Content: View>: UIViewControllerRepresentable {
         _ offset: Binding<CGPoint>,
         scrollViewsTracking: Binding<[Namespace.ID: Bool?]>,
         activeScrollView: Namespace.ID?,
-        animationDuration: TimeInterval,
         showsScrollIndicator: Bool = true,
         axis: Axis = .vertical,
-        onScale: ((CGFloat)->Void)? = nil,
         disableScroll: Bool = false,
         disableScrollIfNotFirstActive: Bool = true,
         stopScrolling: Binding<Bool> = .constant(false),
@@ -102,8 +102,6 @@ struct ScrollableView<Content: View>: UIViewControllerRepresentable {
         self._offset = offset
         self._scrollViewsTracking = scrollViewsTracking
         self.activeScrollView = activeScrollView
-        self.onScale = onScale
-        self.animationDuration = animationDuration
         self.content = content
         self.showsScrollIndicator = showsScrollIndicator
         self.axis = axis
@@ -113,8 +111,7 @@ struct ScrollableView<Content: View>: UIViewControllerRepresentable {
         self.scrollViewController = UIScrollViewController(
             rootView: self.content(),
             offset: offset,
-            axis: self.axis,
-            onScale: self.onScale
+            axis: self.axis
         )
     }
 
@@ -130,7 +127,6 @@ struct ScrollableView<Content: View>: UIViewControllerRepresentable {
         viewController.scrollView.showsHorizontalScrollIndicator = self.showsScrollIndicator
         viewController.updateContent(self.content)
 
-        let duration: TimeInterval = self.duration(viewController)
         let newValue: CGPoint = self.offset
 
         if let activeScrollView = activeScrollView, disableScrollIfNotFirstActive && id != activeScrollView {
@@ -152,22 +148,11 @@ struct ScrollableView<Content: View>: UIViewControllerRepresentable {
             .values
             .contains { $0 == true }
 
-        guard isOtherScrollViewTracking || (!viewController.scrollView.isTracking && !viewController.scrollView.isDecelerating) else { return }
+        guard 
+            isOtherScrollViewTracking || (!viewController.scrollView.isTracking && !viewController.scrollView.isDecelerating)
+        else { return }
 
-        guard duration != .zero else {
-            viewController.scrollView.contentOffset = newValue
-            return
-        }
-
-        UIView.animate(
-            withDuration: duration,
-            delay: 0,
-            options: [.allowUserInteraction, .curveEaseInOut, .beginFromCurrentState],
-            animations: {
-                viewController.scrollView.contentOffset = newValue
-            }, 
-            completion: nil
-        )
+        viewController.scrollView.contentOffset = newValue
     }
 
     func makeCoordinator() -> Coordinator {
@@ -178,73 +163,33 @@ struct ScrollableView<Content: View>: UIViewControllerRepresentable {
             scrollViewsTracking: $scrollViewsTracking
         )
     }
-
-    private func newContentOffset(_ viewController: UIViewControllerType, newValue: CGPoint) -> CGPoint {
-        let maxOffsetViewFrame: CGRect = viewController.view.frame
-        let maxOffsetFrame: CGRect = viewController.hostingController.view.frame
-        let maxOffsetX: CGFloat = maxOffsetFrame.maxX - maxOffsetViewFrame.maxX
-        let maxOffsetY: CGFloat = maxOffsetFrame.maxY - maxOffsetViewFrame.maxY
-
-        return CGPoint(x: min(newValue.x, maxOffsetX), y: min(newValue.y, maxOffsetY))
-    }
-
-    private func duration(_ viewController: UIViewControllerType) -> TimeInterval {
-
-        var diff: CGFloat = 0
-
-        switch axis {
-            case .horizontal:
-                diff = abs(viewController.scrollView.contentOffset.x - self.offset.x)
-            default:
-                diff = abs(viewController.scrollView.contentOffset.y - self.offset.y)
-        }
-
-        if diff == 0 {
-            return .zero
-        }
-
-        let percentageMoved = diff / UIScreen.main.bounds.height
-
-        return self.animationDuration * min(max(TimeInterval(percentageMoved), 0.25), 1)
-    }
 }
 
 final class UIScrollViewController<Content: View> : UIViewController, ObservableObject {
 
     var offset: Binding<CGPoint>
-    var onScale: ((CGFloat)->Void)?
     let hostingController: UIHostingController<Content>
     private let axis: Axis
+    
     lazy var scrollView: UIScrollView = {
-
         let scrollView = UIScrollView()
         scrollView.canCancelContentTouches = true
         scrollView.delaysContentTouches = true
         scrollView.scrollsToTop = true
         scrollView.backgroundColor = .clear
 
-        if self.onScale != nil {
-            scrollView.addGestureRecognizer(UIPinchGestureRecognizer(target: self, action: #selector(self.onGesture)))
-        }
-
         return scrollView
     }()
-
-    @objc func onGesture(gesture: UIPinchGestureRecognizer) {
-        self.onScale?(gesture.scale)
-    }
 
     init(
         rootView: Content,
         offset: Binding<CGPoint>,
-        axis: Axis,
-        onScale: ((CGFloat)-> Void)?
+        axis: Axis
     ) {
         self.offset = offset
         self.hostingController = UIHostingController<Content>(rootView: rootView)
         self.hostingController.view.backgroundColor = .clear
         self.axis = axis
-        self.onScale = onScale
         super.init(nibName: nil, bundle: nil)
     }
 

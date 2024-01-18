@@ -28,7 +28,7 @@ struct ContentView: View {
 
     private let padding: CGFloat = 8
     private let gridWidth: CGFloat = 3000
-    private let gridHeight: CGFloat = 300
+    private let gridHeight: CGFloat = 400
     private let gridSquareSize: CGFloat = 50
 
     var body: some View {
